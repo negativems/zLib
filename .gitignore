@@ -1,0 +1,9 @@
+# Compiled plugin files
+target/
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.settings/
+.project
