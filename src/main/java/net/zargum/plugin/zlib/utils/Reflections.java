@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Reflections {
 
-    public void setValue(Object obj, String name, Object value) {
+    public static void setValue(Object obj, String name, Object value) {
         try {
             Field field = obj.getClass().getDeclaredField(name);
             field.setAccessible(true);
@@ -20,7 +20,7 @@ public class Reflections {
         }
     }
 
-    public Object getValue(Object obj, String name) {
+    public static Object getValue(Object obj, String name) {
         try {
             Field field = obj.getClass().getDeclaredField(name);
             field.setAccessible(true);
@@ -31,19 +31,19 @@ public class Reflections {
         return null;
     }
 
-    public void sendPacket(Packet<?> packet, Player player) {
+    public static void sendPacket(Packet<?> packet, Player player) {
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
 
-    public void sendPacket(Packet<?> packet, Player... players) {
+    public static void sendPacket(Packet<?> packet, Player... players) {
         for (Player player : players) ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
 
-    public void sendPacket(Packet<?> packet, List<Player> players) {
+    public static void sendPacket(Packet<?> packet, List<Player> players) {
         for (Player player : players) ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
 
-    public void sendPacket(Packet<?> packet) {
+    public static void sendPacket(Packet<?> packet) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             sendPacket(packet, player);
         }

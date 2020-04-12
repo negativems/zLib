@@ -17,7 +17,6 @@ import java.util.*;
 public class Hologram extends Reflections {
 
     // TODO: Change Player object to UUID
-
     private double linesdistance;
     private boolean created;
 
@@ -38,7 +37,6 @@ public class Hologram extends Reflections {
         this();
         this.lines.add(firstLine);
     }
-
 
     public Hologram setLocation(Location location) {
         this.location = location.clone();

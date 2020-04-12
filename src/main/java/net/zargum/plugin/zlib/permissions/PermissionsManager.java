@@ -1,22 +1,33 @@
 package net.zargum.plugin.zlib.permissions;
 
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.context.ImmutableContextSet;
+import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.InheritanceNode;
+import net.luckperms.api.node.types.PrefixNode;
 import net.luckperms.api.query.QueryOptions;
 import net.zargum.plugin.zlib.zLib;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PermissionsManager {
 
     private static LuckPerms API = zLib.getInstance().getLuckPermsApi();
 
-    private static User getUser(Player player) {
+    private static User loadUser(Player player) {
         if (!player.isOnline()) throw new IllegalStateException("Player is offline");
+        return API.getUserManager().getUser(player.getUniqueId());
+    }
+
+    private static User loadUser(String username) {
+        Player player = Bukkit.getPlayer(username);
+        if (player == null) throw new IllegalStateException("Player is offline");
         return API.getUserManager().getUser(player.getUniqueId());
     }
 
@@ -24,10 +35,12 @@ public class PermissionsManager {
         return API.getGroupManager().getGroup(group) != null;
     }
 
-    public static boolean hasMoreOrSamePriority(String group1, String group2) {
-        if (existsGroup(group1) && existsGroup(group2)) {
-            int weight1 = API.getGroupManager().getGroup(group1).getWeight().orElse(0);
-            int weight2 = API.getGroupManager().getGroup(group2).getWeight().orElse(0);
+    public static boolean hasMoreOrSamePriority(String g1, String g2) {
+        Group group1 = API.getGroupManager().getGroup(g1);
+        Group group2 = API.getGroupManager().getGroup(g2);
+        if (group1 != null && group2 != null) {
+            int weight1 = group1.getWeight().orElse(0);
+            int weight2 = group2.getWeight().orElse(0);
             return weight1 >= weight2;
         }
         zLib.log(ChatColor.RED + "Group " + group1 + " or " + group2 + " is not exist.");
@@ -35,53 +48,78 @@ public class PermissionsManager {
     }
 
     public static String getPrimaryGroup(Player player) {
-        if (API.getUserManager().getUser(player.getUniqueId()) == null) return null;
-        return API.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup();
+        User user = loadUser(player);
+        return user.getPrimaryGroup();
     }
 
     public static String getPrimaryGroup(String username) {
-        if (API.getUserManager().getUser(username) == null) return null;
-        return API.getUserManager().getUser(username).getPrimaryGroup();
+        User user = loadUser(username);
+        return user.getPrimaryGroup();
     }
 
-    public static String getUserPrefix(String username) {
-        User user = API.getUserManager().getUser(username);
-        Group group = getGroup(getPrimaryGroup(username));
-        String prefix = "";
-        if (user != null && group != null) {
-            Optional<ImmutableContextSet> optional = API.getContextManager().getContext(user);
-            if (optional.isPresent()) prefix = user.getCachedData().getMetaData(QueryOptions.nonContextual()).getPrefix();
-            else prefix = group.getCachedData().getMetaData(QueryOptions.nonContextual()).getPrefix();
-        }
-        return prefix;
+    public static List<String> getPlayerGroups(Player player) {
+        User user = loadUser(player);
+        List<String> list = user.resolveInheritedNodes(QueryOptions.nonContextual()).stream()
+                .filter(NodeType.INHERITANCE::matches)
+                .map(NodeType.INHERITANCE::cast)
+                .map(InheritanceNode::getGroupName).collect(Collectors.toList());
+        return list;
     }
 
-    public static String getUserSuffix(String username) {
-        User user = API.getUserManager().getUser(username);
-        Group group = getGroup(username);
-        String suffix = "";
-        if (user != null && group != null) {
-            Optional<ImmutableContextSet> optional = API.getContextManager().getContext(user);
-            if (optional.isPresent()) suffix = user.getCachedData().getMetaData(QueryOptions.nonContextual()).getSuffix();
-            else suffix = group.getCachedData().getMetaData(QueryOptions.nonContextual()).getSuffix();
+    private static CachedMetaData getGroupMeta(Group group) {
+        QueryOptions contexts = API.getContextManager().getStaticQueryOptions();
+        return group.getCachedData().getMetaData(contexts);
+    }
+
+    private static CachedMetaData getUserMeta(User user, Player player) {
+        QueryOptions contexts = API.getContextManager().getQueryOptions(player);
+        return user.getCachedData().getMetaData(contexts);
+    }
+
+    public static String getUserPrefix(Player player) {
+        User user = loadUser(player);
+        CachedMetaData metaData = getUserMeta(user, player);
+        return metaData.getPrefix() == null ? "" : metaData.getPrefix();
+    }
+
+    public static String getUserSuffix(Player player) {
+        User user = loadUser(player);
+        CachedMetaData metaData = getUserMeta(user, player);
+        return metaData.getSuffix() == null ? "" : metaData.getSuffix();
+    }
+
+    public static void setUserPrefix(Player player, String prefix) {
+        User user = loadUser(player);
+        PrefixNode node;
+        if (prefix == null) {
+            String pre = getUserPrefix(player);
+            node = PrefixNode.builder(pre, 99).build();
+            user.data().remove(node);
+        } else {
+            node = PrefixNode.builder(prefix, 99).build();
+            user.data().add(node);
         }
-        return suffix;
+        API.getUserManager().saveUser(user);
     }
 
     public static String getDisplayname(String username) {
-        User user = API.getUserManager().getUser(username);
-        if (user == null) return null;
-        return getUserPrefix(username) + user.getUsername() + getUserSuffix(username);
+        User user = loadUser(username);
+        Player player = Bukkit.getPlayer(username);
+        return getUserPrefix(player) + user.getUsername() + getUserSuffix(player);
     }
 
-    public static String getGroupPrefix(String group) {
-        if (!existsGroup(group)) return null;
-        return getGroup(group).getCachedData().getMetaData(QueryOptions.nonContextual()).getPrefix();
+    public static String getGroupPrefix(String grp) {
+        Group group = API.getGroupManager().getGroup(grp);
+        if (group == null) return "";
+        CachedMetaData metaData = getGroupMeta(group);
+        return metaData.getPrefix() == null ? "" : metaData.getPrefix();
     }
 
-    public static String getGroupSuffix(String group) {
-        if (!existsGroup(group)) return null;
-        return getGroup(group).getCachedData().getMetaData(QueryOptions.nonContextual()).getSuffix();
+    public static String getGroupSuffix(String grp) {
+        Group group = API.getGroupManager().getGroup(grp);
+        if (group == null) return "";
+        CachedMetaData metaData = getGroupMeta(group);
+        return metaData.getSuffix() == null ? "" : metaData.getSuffix();
     }
 
     public static List<String> getGroups() {
@@ -107,7 +145,6 @@ public class PermissionsManager {
 
         for (String groupName : disorderedGroups) {
             int weight;
-
             if (getGroup(groupName).getWeight().isPresent()) weight = getGroup(groupName).getWeight().getAsInt();
             else weight = 0;
 
@@ -129,4 +166,7 @@ public class PermissionsManager {
         return ChatColor.getByChar(prefix.substring(prefix.indexOf('[') + 2, prefix.indexOf('[') + 3));
     }
 
+    public static boolean isPlayerInGroup(Player player, String group) {
+        return player.hasPermission("group." + group);
+    }
 }

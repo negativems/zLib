@@ -19,65 +19,80 @@ import java.util.function.Consumer;
 public class MenuBuilder implements InventoryHolder {
 
     private String title;
-    private HashMap<Integer, ItemStack> items;
-    private HashMap<ItemStack, MenuButton> buttons;
+    private HashMap<Integer, ItemStack> items = new HashMap<>();
+    private HashMap<ItemStack, MenuButton> buttons = new HashMap<>();
     private Inventory inventory;
     private boolean cancelledClickToOtherItems;
-    private List<ItemStack> pickableItems;
+    private List<ItemStack> pickableItems = new ArrayList<>();
     @Setter private int rows;
     @Setter private MenuPattern pattern;
-    @Setter private InventoryType inventoryType;
-
+    private InventoryType inventoryType;
     @Setter private Consumer<InventoryOpenEvent> openListener;
     @Setter private Consumer<InventoryCloseEvent> closeListener;
     @Setter private Consumer<InventoryPickupItemEvent> pickupListener; // When a hopper or hopper minecart picks up a dropped item.
 
-    public MenuBuilder() {
-        this.title = "";
-        this.rows = 3;
-        this.items = new HashMap<>();
-        this.inventoryType = InventoryType.CHEST;
-        this.buttons = new HashMap<>();
-        this.pickableItems = new ArrayList<>();
+    public MenuBuilder(String title, int rows, InventoryType inventoryType) {
+        this.title = title;
+        this.rows = rows;
+        this.inventoryType = inventoryType;
     }
 
     public void setTitle(String title) {
-        this.title = ChatColor.translateAlternateColorCodes(title);
+        this.title = ChatColor.translateAlternateColorCodes('&', title);
     }
 
     public void setCancelledClickToOtherItems(){
         this.cancelledClickToOtherItems = true;
     }
 
+    public boolean isSlotEmpty(int i) {
+        if (slotExist(i)) return !items.containsKey(i);
+        throw new IllegalArgumentException("Invalid slot");
+    }
+
+    public ItemStack getItemAtSlot(int i) {
+        if (!isSlotEmpty(i)) return null;
+        return inventory.getItem(i);
+    }
+
+    public void setInventoryType(InventoryType inventoryType) {
+        this.inventoryType = inventoryType;
+        if (inventoryType.equals(InventoryType.CHEST)) inventory = Bukkit.createInventory(null, rows*9, title);
+        inventory = Bukkit.createInventory(this, inventoryType, title);
+    }
+
     public void setItem(int slot, ItemStack item) {
         if (!slotExist(slot)) throw new IllegalStateException("Error creating menu: tried to put an item in an invalid slot.");
-        this.items.put(slot, item);
+        items.put(slot, item);
     }
 
     private void build() {
         if (pattern != null) {
-            this.rows = pattern.getPattern().size();
-            inventory = Bukkit.createInventory(null, rows*9, title);
-            if (inventoryType != InventoryType.CHEST) inventory = Bukkit.createInventory(this, inventoryType, title);
-
+            rows = pattern.getPattern().size();
+            if (inventoryType.equals(InventoryType.CHEST)) inventory = Bukkit.createInventory(this, rows * 9, title);
+            else inventory = Bukkit.createInventory(this, inventoryType, title);
             int slot = 0;
             for (String p : pattern.getPattern()) {
-                if (p.length() != inventoryType.getDefaultSize()) {
-                    String message = "Error creating menu ( " + inventoryType.getDefaultTitle() +
-                            " ): a pattern not contains " + inventoryType.getDefaultSize() + " chars/slots";
+                if (!inventoryType.equals(InventoryType.CHEST) && p.length() != inventoryType.getDefaultSize()) {
+                    String message = "Error creating menu ( " + inventoryType.getDefaultTitle() + " ): a pattern not contains " + inventoryType.getDefaultSize() + " chars/slots";
                     throw new IllegalStateException(message);
                 }
                 for (Character c : p.toCharArray()) {
                     if (!pattern.getKeys().containsKey(c)) throw new IllegalStateException("Error creating menu: pattern has char with no item defined.");
-
                     ItemStack item = pattern.getKeys().get(c);
-                    this.items.put(slot, item);
+                    if (!items.containsKey(slot)) this.items.put(slot, item);
                     slot++;
                 }
             }
-            for (Integer i : items.keySet()) inventory.setItem(i, items.get(i));
         }
-        if (pattern == null && inventory == null) this.inventory = Bukkit.createInventory(this, rows * 9, title);
+        if (pattern == null && inventory == null) {
+            if (inventoryType.equals(InventoryType.CHEST)) inventory = Bukkit.createInventory(this, rows * 9, title);
+            else inventory = Bukkit.createInventory(this, inventoryType, title);
+        }
+        inventory.clear();
+        for (Integer i : items.keySet()) {
+            inventory.setItem(i, items.get(i));
+        }
     }
 
     public void setButton(ItemStack item, ClickType clickType, Consumer<InventoryClickEvent> event) {
@@ -97,12 +112,16 @@ public class MenuBuilder implements InventoryHolder {
 
     public void open(Player player) {
         build();
-        player.openInventory(getInventory());
+        player.openInventory(inventory);
     }
 
     // Utils
     private boolean slotExist(int slot) {
-        return slot <= rows * 9;
+        return slot <= rows * getMaxSlotPerLine(inventoryType);
+    }
+    private int getMaxSlotPerLine(InventoryType inventoryType) {
+        if (inventoryType.equals(InventoryType.CHEST)) return 9;
+        return inventoryType.getDefaultSize();
     }
     public MenuButton getButtonByItem(ItemStack item) {
         return this.buttons.get(item);

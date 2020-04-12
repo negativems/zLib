@@ -18,7 +18,6 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onOpen(InventoryOpenEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        System.out.println(holder instanceof MenuBuilder);
         if (!(holder instanceof MenuBuilder)) return;
 
         MenuBuilder menu = (MenuBuilder) holder;
@@ -30,7 +29,6 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-
         if (!(holder instanceof MenuBuilder)) return;
 
         MenuBuilder menu = (MenuBuilder) holder;
@@ -43,13 +41,12 @@ public class MenuListener implements Listener {
     public void onPickup(InventoryPickupItemEvent event) { // When hopper pickup an item
         InventoryHolder holder = event.getInventory().getHolder();
 
-        if (!(holder instanceof MenuBuilder))
-            return;
+        if (!(holder instanceof MenuBuilder)) return;
 
         MenuBuilder menu = (MenuBuilder) holder;
         Consumer<InventoryPickupItemEvent> pickupListener = menu.getPickupListener();
 
-        if(pickupListener != null) pickupListener.accept(event);
+        if (pickupListener != null) pickupListener.accept(event);
     }
 
     @EventHandler
@@ -72,7 +69,7 @@ public class MenuListener implements Listener {
             Consumer clickedEvent = button.getEvents().get(event.getClick());
             clickedEvent.accept(event);
         } else {
-            if(menu.isCancelledClickToOtherItems()) event.setCancelled(true);
+            if (menu.isCancelledClickToOtherItems()) event.setCancelled(true);
         }
     }
 }
