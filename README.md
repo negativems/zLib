@@ -3,9 +3,15 @@ zLib is a library that improves the functionality of plugins from the Minecraft 
 
 ---
 **Content:**
-- NPC builder.
-- Hologram builder.
-- Scoreboard builder.
-- Menu builder. (with patterns)
-- LuckPerms helper.
-- Proxy helper.
+- NPC builder (Need to test)
+- Hologram builder (Not finalized)
+- Scoreboard builder
+- Menu builder (with patterns)
+- LuckPerms helper
+- Proxy helper
+- Staff Util
+
+**New**
+- Redis Support
+- Teleport Manager (with cooldown events)
+- Skull Creator (By: Dean B) (need to change deprecated methods to reflection)

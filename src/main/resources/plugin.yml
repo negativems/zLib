@@ -1,5 +1,5 @@
 name: ${project.name}
-main: net.zargum.plugin.zlib.zLib
+main: net.zargum.zlib.zLib
 version: ${project.version}
 description: ${project.description}
 author: N3G4T1V3
