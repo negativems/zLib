@@ -23,6 +23,7 @@
         </includes>
       </resource>
     </resources>
+    <finalName>zLib</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>

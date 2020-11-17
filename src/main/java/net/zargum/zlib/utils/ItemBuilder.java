@@ -60,7 +60,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder type(final Material material) {
-        buildItem().setType(material);
+        item.setType(material);
         return this;
     }
 
@@ -72,7 +72,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder amount(final Integer itemAmt) {
-        buildItem().setAmount(itemAmt);
+        item.setAmount(itemAmt);
         return this;
     }
 
@@ -84,8 +84,8 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder setName(final String name) {
-        meta().setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
-        buildItem().setItemMeta(meta());
+        getItemMeta().setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+        item.setItemMeta(getItemMeta());
         return this;
     }
 
@@ -97,13 +97,12 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder addLoreLine(final String lore) {
-        List<String> lores = meta().getLore();
+        List<String> lores = getItemMeta().getLore();
         if (lores == null) {
             lores = new ArrayList<>();
         }
-        lores.add('&', lore);
-        meta().setLore(lores);
-        buildItem().setItemMeta(meta());
+        lores.add(ColorUtils.translate(lore));
+        itemMeta.setLore(lores);
         return this;
     }
 
@@ -114,15 +113,16 @@ public class ItemBuilder {
      * @return the current instance for chainable application.
      * @since 1.0
      */
-    public ItemBuilder setLore(final String[] lores) {
-        List<String> loresList = meta().getLore();
+    public ItemBuilder setLore(String[] lores) {
+        lores = ColorUtils.translate(lores);
+        List<String> loresList = itemMeta.getLore();
         if (loresList == null) {
             loresList = new ArrayList<>();
         } else {
             loresList.clear();
         }
         Collections.addAll(loresList, lores);
-        meta().setLore(loresList);
+        itemMeta.setLore(loresList);
         return this;
     }
 
@@ -134,7 +134,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder setDurability(final int durability) {
-        buildItem().setDurability((short) durability);
+        item.setDurability((short) durability);
         return this;
     }
 
@@ -147,7 +147,7 @@ public class ItemBuilder {
      */
     @SuppressWarnings("deprecation")
     public ItemBuilder data(final int data) {
-        buildItem().setData(new MaterialData(buildItem().getType(), (byte) data));
+        item.setData(new MaterialData(item.getType(), (byte) data));
         return this;
     }
 
@@ -160,7 +160,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder enchantment(final Enchantment enchantment, final int level) {
-        buildItem().addUnsafeEnchantment(enchantment, level);
+        item.addUnsafeEnchantment(enchantment, level);
         return this;
     }
 
@@ -172,7 +172,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder enchantment(final Enchantment enchantment) {
-        buildItem().addUnsafeEnchantment(enchantment, 1);
+        item.addUnsafeEnchantment(enchantment, 1);
         return this;
     }
 
@@ -185,9 +185,9 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder enchantments(final Enchantment[] enchantments, final int level) {
-        buildItem().getEnchantments().clear();
+        item.getEnchantments().clear();
         for (Enchantment enchantment : enchantments) {
-            buildItem().addUnsafeEnchantment(enchantment, level);
+            item.addUnsafeEnchantment(enchantment, level);
         }
         return this;
     }
@@ -200,9 +200,9 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder enchantments(final Enchantment[] enchantments) {
-        buildItem().getEnchantments().clear();
+        item.getEnchantments().clear();
         for (Enchantment enchantment : enchantments) {
-            buildItem().addUnsafeEnchantment(enchantment, 1);
+            item.addUnsafeEnchantment(enchantment, 1);
         }
         return this;
     }
@@ -215,7 +215,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder clearEnchantment(final Enchantment enchantment) {
-        Map<Enchantment, Integer> itemEnchantments = buildItem().getEnchantments();
+        Map<Enchantment, Integer> itemEnchantments = item.getEnchantments();
         for (Enchantment enchantmentC : itemEnchantments.keySet()) {
             if (enchantment == enchantmentC) {
                 itemEnchantments.remove(enchantmentC);
@@ -231,7 +231,7 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder clearEnchantments() {
-        buildItem().getEnchantments().clear();
+        item.getEnchantments().clear();
         return this;
     }
 
@@ -243,8 +243,8 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder clearLore(final String lore) {
-        meta().getLore().remove(lore);
-        buildItem().setItemMeta(meta());
+        getItemMeta().getLore().remove(lore);
+        item.setItemMeta(getItemMeta());
         return this;
     }
 
@@ -255,8 +255,8 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder clearLores() {
-        meta().getLore().clear();
-        buildItem().setItemMeta(meta());
+        getItemMeta().getLore().clear();
+        item.setItemMeta(getItemMeta());
         return this;
     }
 
@@ -268,13 +268,13 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder color(final Color color) {
-        if (buildItem().getType() == Material.LEATHER_HELMET
-                || buildItem().getType() == Material.LEATHER_CHESTPLATE
-                || buildItem().getType() == Material.LEATHER_LEGGINGS
-                || buildItem().getType() == Material.LEATHER_BOOTS) {
-            LeatherArmorMeta meta = (LeatherArmorMeta) meta();
+        if (item.getType() == Material.LEATHER_HELMET
+                || item.getType() == Material.LEATHER_CHESTPLATE
+                || item.getType() == Material.LEATHER_LEGGINGS
+                || item.getType() == Material.LEATHER_BOOTS) {
+            LeatherArmorMeta meta = (LeatherArmorMeta) getItemMeta();
             meta.setColor(color);
-            buildItem().setItemMeta(meta);
+            item.setItemMeta(meta);
         }
         return this;
     }
@@ -286,13 +286,13 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder clearColor() {
-        if (buildItem().getType() == Material.LEATHER_HELMET
-                || buildItem().getType() == Material.LEATHER_CHESTPLATE
-                || buildItem().getType() == Material.LEATHER_LEGGINGS
-                || buildItem().getType() == Material.LEATHER_BOOTS) {
-            LeatherArmorMeta meta = (LeatherArmorMeta) meta();
+        if (item.getType() == Material.LEATHER_HELMET
+                || item.getType() == Material.LEATHER_CHESTPLATE
+                || item.getType() == Material.LEATHER_LEGGINGS
+                || item.getType() == Material.LEATHER_BOOTS) {
+            LeatherArmorMeta meta = (LeatherArmorMeta) getItemMeta();
             meta.setColor(null);
-            buildItem().setItemMeta(meta);
+            item.setItemMeta(meta);
         }
         return this;
     }
@@ -305,10 +305,10 @@ public class ItemBuilder {
      * @since 1.0
      */
     public ItemBuilder skullOwner(final String name) {
-        if (buildItem().getType() == Material.SKULL_ITEM && buildItem().getDurability() == (byte) 3) {
-            SkullMeta skullMeta = (SkullMeta) meta();
+        if (item.getType() == Material.SKULL_ITEM && item.getDurability() == (byte) 3) {
+            SkullMeta skullMeta = (SkullMeta) getItemMeta();
             skullMeta.setOwner(name);
-            buildItem().setItemMeta(meta());
+            item.setItemMeta(itemMeta);
         }
         return this;
     }
@@ -318,7 +318,7 @@ public class ItemBuilder {
      *
      * @return the ItemMeta of the ItemStack.
      */
-    public ItemMeta meta() {
+    public ItemMeta getItemMeta() {
         return itemMeta;
     }
 
@@ -328,6 +328,7 @@ public class ItemBuilder {
      * @return the ItemStack of the ItemBuilder instance.
      */
     public ItemStack buildItem() {
+        item.setItemMeta(itemMeta);
         return item;
     }
 

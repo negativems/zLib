@@ -3,4 +3,4 @@ main: net.zargum.zlib.zLib
 version: ${project.version}
 description: ${project.description}
 author: N3G4T1V3
-api-version: "1.8"
+api-version: "1.0"

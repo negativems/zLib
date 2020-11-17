@@ -4,9 +4,12 @@ import net.zargum.zlib.utils.ColorUtils;
 
 public enum Messages {
 
+    NO_PERMISSION("&c# &7You do not have permission."),
+    ONLY_CONSOLE("&c# &7Only console can use that command."),
+    ONLY_PLAYER("&c# &7Only players can use this command."),
     COMMAND_USAGE("&c# &7Use: &e/%1 %2");
 
-    private String value;
+    private final String value;
 
     Messages(String message) {
         this.value = message;
@@ -33,8 +36,7 @@ public enum Messages {
     }
 
     public String[] toStringList() {
-        String t = this.value;
-        return ColorUtils.translate(t.split("\n"));
+        return ColorUtils.translate(this.value.split("\n"));
     }
     public String[] toStringList(String... args) {
         String t = this.value;

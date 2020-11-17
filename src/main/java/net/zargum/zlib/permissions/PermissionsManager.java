@@ -102,6 +102,12 @@ public class PermissionsManager {
         API.getUserManager().saveUser(user);
     }
 
+    public static String getGroupDisplayName(String groupName) throws NullPointerException {
+        Group group = PermissionsManager.getGroup(groupName);
+        if (group == null) return null;
+        return group.getDisplayName();
+    }
+
     public static String getDisplayname(String username) {
         User user = loadUser(username);
         Player player = Bukkit.getPlayer(username);

@@ -1,74 +1,70 @@
 package net.zargum.zlib.command;
 
 import lombok.Getter;
-import lombok.Setter;
 import net.zargum.zlib.messages.Messages;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
-public abstract class ServerCommand {
+@Getter
+public abstract class ServerCommand<T extends JavaPlugin> {
 
-    @Getter private final String commandName;
-    @Getter private final String label;
-    @Getter @Setter private final String description;
-    @Getter @Setter private String[] aliases = new String[]{};
-    @Getter private final String usageMessage;
-    @Getter @Setter private int minArgRequired = 0;
-    @Getter @Setter private String permission;
-    @Getter private boolean requiredPermission = false;
-    @Getter private boolean consoleOnly = false;
-    @Getter private boolean playerOnly = false;
-    @Setter private String usage;
-    @Setter private String customUsage;
-    @Getter private final Map<Integer, List<String>> tabCompletionList = new HashMap<>();
+    public final T plugin;
 
-    public ServerCommand(String commandName, String description, String usage, String aliases) {
-        this.commandName = commandName.toLowerCase();
+    private final String name;
+    private final String label;
+    private final String description;
+    private String[] aliases = new String[]{};
+    private final String usageMessage;
+    private int minArgRequired = 0;
+    private final String permission;
+    private final boolean requiredPermission = true;
+    private final boolean consoleOnly = false;
+    private final boolean playerOnly = false;
+    private final List<ServerCommandArgument<T>> arguments = new ArrayList<>();
+    private final Map<Integer, List<String>> tabCompletionList = new HashMap<>();
+
+    public ServerCommand(String name, String description, String usage, String aliases) {
+        plugin = JavaPlugin.getPlugin((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+
+        this.name = name.toLowerCase();
         this.description = description;
-        this.usage = usage;
-        this.label = commandName;
-        usageMessage = Messages.COMMAND_USAGE.toString(commandName, usage);
-        if (!aliases.equals("")) this.aliases = aliases.split(", ");
-        permission = "command." + commandName;
+        this.label = name;
+        usageMessage = Messages.COMMAND_USAGE.toString(name, usage);
+        if (aliases != null && !aliases.equals("")) this.aliases = aliases.split(", ");
+        permission = "command." + name;
         if (!usage.isEmpty()) {
             String[] args = usage.split(" ");
             for (String arg : args) if (arg.charAt(0) == '<') minArgRequired++;
         }
     }
 
-    public ServerCommand(String commandName, String description, String usage) {
-        this(commandName, description, usage, "");
+    public ServerCommand(String name, String description, String usage) {
+        this(name, description, usage, "");
     }
 
-    public ServerCommand(String commandName, String description) {
-        this(commandName, description, "", "");
+    public ServerCommand(String name, String description) {
+        this(name, description, "", "");
     }
 
     public abstract void execute(String label, CommandSender sender, String[] args);
 
-    public void requiredPermission() {
-        requiredPermission = true;
-    }
-
-    public String getUsage() {
-        System.out.println(customUsage);
-        return customUsage != null ? customUsage : usageMessage;
-    }
-
-    public void playerOnly() {
-        playerOnly = true;
-        consoleOnly = false;
-    }
-
-    public void consoleOnly() {
-        consoleOnly = true;
-        playerOnly = false;
+    public void addArgument(ServerCommandArgument<T> argument) {
+        arguments.add(argument);
+        addToTablistCompletion(1, argument.getArgumentName());
     }
 
     public void addToTablistCompletion(int pos, String arg) {
-        if (tabCompletionList.containsKey(pos)) tabCompletionList.get(pos).add(arg);
-        else tabCompletionList.put(pos, Collections.singletonList(arg));
+        if (tabCompletionList.containsKey(pos)) {
+            tabCompletionList.get(pos).add(arg);
+        }
+        else {
+            List<String> arguments = new ArrayList<>();
+            arguments.add(arg);
+            tabCompletionList.put(pos, arguments);
+        }
     }
 
     public void addToTablistCompletion(int pos, String... args) {
