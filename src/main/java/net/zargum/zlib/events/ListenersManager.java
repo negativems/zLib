@@ -6,14 +6,14 @@ import net.zargum.zlib.teleport.TeleportListener;
 import net.zargum.zlib.zLib;
 import org.bukkit.event.Listener;
 
-public class EventManager {
+public class ListenersManager {
 
     private final zLib plugin;
 
-    public EventManager(zLib plugin) {
+    public ListenersManager(zLib plugin) {
         this.plugin = plugin;
         register(new PlayerDamageByPlayerListener());
-        register(new MenuListener());
+        register(new MenuListener(plugin));
         register(new TeleportListener(plugin));
     }
 

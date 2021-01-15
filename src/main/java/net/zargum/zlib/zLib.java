@@ -2,8 +2,7 @@ package net.zargum.zlib;
 
 import lombok.Getter;
 import net.luckperms.api.LuckPerms;
-import net.zargum.zlib.events.EventManager;
-import net.zargum.zlib.menu.MenuListener;
+import net.zargum.zlib.events.ListenersManager;
 import net.zargum.zlib.proxy.ProxyHandler;
 import net.zargum.zlib.scoreboard.Scoreboard;
 import net.zargum.zlib.skin.SkinManager;
@@ -33,7 +32,7 @@ public class zLib extends JavaPlugin {
     public TeleportManager teleportManager;
     public TeleportTask teleportTask;
     public SkinManager skinManager;
-    public EventManager eventManager;
+    public ListenersManager eventManager;
 
     @Override
     public void onEnable() {
@@ -51,14 +50,11 @@ public class zLib extends JavaPlugin {
             getServer().shutdown();
         }
 
-        // Load Managers
+        // Load Managers & Listener
         teleportManager = new TeleportManager(this);
         teleportTask = new TeleportTask(this);
         skinManager = new SkinManager(this);
-        eventManager = new EventManager(this);
-
-        // Load Listeners
-        getServer().getPluginManager().registerEvents(new MenuListener(this), this);
+        eventManager = new ListenersManager(this);
 
         // Bungee Helper
         log("Register BungeeCord channel...");
