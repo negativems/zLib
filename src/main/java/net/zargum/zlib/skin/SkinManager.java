@@ -2,6 +2,7 @@ package net.zargum.zlib.skin;
 
 import lombok.Getter;
 import net.zargum.zlib.zLib;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,10 +31,10 @@ public class SkinManager {
         configuration = new YamlConfiguration();
         try {
             if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-                zLib.log("&cCan not create " + file.getName() + " folder.");
+                zLib.log(ChatColor.RED + "Can not create " + file.getName() + " folder.");
             }
             if (!file.exists() && !file.createNewFile()) {
-                zLib.log("&cCan not create " + file.getName() + " file.");
+                zLib.log(ChatColor.RED + "Can not create " + file.getName() + " file.");
             }
             configuration.load(file);
         } catch (IOException | InvalidConfigurationException e) {

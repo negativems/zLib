@@ -1,4 +1,4 @@
-package net.zargum.zlib.menu;
+package net.zargum.zlib.menu.deprecated;
 
 import lombok.Getter;
 import org.bukkit.event.inventory.ClickType;
@@ -6,7 +6,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
-
+@Deprecated
 public class MenuButton {
 
     @Getter private HashMap<ClickType, Consumer<InventoryClickEvent>> events;

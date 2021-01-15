@@ -1,6 +1,7 @@
 package net.zargum.zlib.command;
 
 import lombok.Getter;
+import lombok.Setter;
 import net.zargum.zlib.messages.Messages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,14 +18,14 @@ public abstract class ServerCommand<T extends JavaPlugin> {
     private final String label;
     private final String description;
     private String[] aliases = new String[]{};
-    private final String usageMessage;
-    private int minArgRequired = 0;
-    private final String permission;
-    private final boolean requiredPermission = true;
-    private final boolean consoleOnly = false;
-    private final boolean playerOnly = false;
     private final List<ServerCommandArgument<T>> arguments = new ArrayList<>();
     private final Map<Integer, List<String>> tabCompletionList = new HashMap<>();
+    @Setter private int minArgRequired = 0;
+    @Setter private String usageMessage;
+    @Setter private String permission;
+    @Setter private boolean requiredPermission = true;
+    @Setter private boolean consoleOnly = false;
+    @Setter private boolean playerOnly = false;
 
     public ServerCommand(String name, String description, String usage, String aliases) {
         plugin = JavaPlugin.getPlugin((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);

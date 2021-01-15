@@ -1,5 +1,6 @@
 package net.zargum.zlib.utils;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
@@ -8,79 +9,63 @@ import org.mockito.internal.util.StringJoiner;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * This is used for generic Java utilities.
- */
 public final class JavaUtils {
 
-    public static boolean isInt(final String sInt) {
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,16}$");
+    private static final Pattern UUID_PATTERN = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}");
+    private static final int DEFAULT_NUMBER_FORMAT_DECIMAL_PLACES = 5;
+    private static final CharMatcher CHAR_MATCHER_ASCII = CharMatcher.inRange('0', '9').
+            or(CharMatcher.inRange('a', 'z')).
+            or(CharMatcher.inRange('A', 'Z')).
+            or(CharMatcher.WHITESPACE).
+            precomputed();
+
+    public static boolean isBoolean(String value) {
+        return value != null && Arrays.stream(new String[]{"true", "false", "1", "0"}).anyMatch(b -> b.equalsIgnoreCase(value));
+    }
+
+    public static boolean isInt(String s) {
         try {
-            Integer.parseInt(sInt);
+            Integer.parseInt(s);
+            return true;
         } catch (NumberFormatException e) {
             return false;
         }
-        return true;
     }
 
-    /**
-     * Regex pattern to validate a UUID.
-     */
-    private static final Pattern UUID_PATTERN = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}");
-
-    /**
-     * The default amount of decimal places to format a number to.
-     */
-    private static final int DEFAULT_NUMBER_FORMAT_DECIMAL_PLACES = 5;
-
-    private JavaUtils() {
-    }
-
-    public static Integer tryParseInt(String string) {
+    public static boolean isFloat(String s) {
         try {
-            return Integer.parseInt(string);
+            Float.parseFloat(s);
+            return true;
         } catch (IllegalArgumentException ex) {
-            return null;
+            return false;
         }
     }
 
-    public static Float tryParseFloat(String string) {
+    public static boolean isDouble(String s) {
         try {
-            return Float.parseFloat(string);
+            Double.parseDouble(s);
+            return true;
         } catch (IllegalArgumentException ex) {
-            return null;
+            return false;
         }
     }
 
-    public static Double tryParseDouble(String string) {
-        try {
-            return Double.parseDouble(string);
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
+    public static boolean isUniqueId(String s) {
+        return UUID_PATTERN.matcher(s).find();
     }
 
-    /**
-     * Checks if a given String is a UUID.
-     *
-     * @param string a string reference to check
-     * @return {@code true} if the given String is a UUID
-     */
-    public static boolean isUUID(String string) {
-        return UUID_PATTERN.matcher(string).find();
+    public static boolean isAlphanumeric(String s) {
+        return s.matches("[a-zA-Z0-9]+");
     }
 
-    /**
-     * Checks if a given string is alphanumeric.
-     *
-     * @param string a string reference to check
-     * @return {@code true} if the given String is alphanumeric
-     */
-    public static boolean isAlphanumeric(String string) {
-        return string.matches("[a-zA-Z0-9]+");
+    public static boolean isValidUsername(String s) {
+        return USERNAME_PATTERN.matcher(s).matches();
     }
 
     /**
@@ -96,7 +81,6 @@ public final class JavaUtils {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -171,22 +155,5 @@ public final class JavaUtils {
 
         if (contents.size() > 0) builder.append(" and ");
         return builder.append(last).toString();
-    }
-
-
-    public static String secondsFormated(long s) {
-        StringBuilder string = new StringBuilder();
-
-        long seconds = s % 60;
-        long minutes = s % 3600 / 60;
-        long hours = s % 86400 / 3600;
-        long days = s / 86400;
-
-        if (days > 0) string.append(days).append(" days, ");
-        if (hours > 0) string.append(hours).append(" hours, ");
-        if (minutes > 0) string.append(minutes).append(" minutes, ");
-        string.append(seconds).append(" seconds");
-
-        return string.toString();
     }
 }

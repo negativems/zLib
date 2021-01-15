@@ -1,4 +1,4 @@
-package net.zargum.zlib.menu;
+package net.zargum.zlib.menu.deprecated;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,15 +15,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Getter
+@Getter @Deprecated
 public class MenuBuilder implements InventoryHolder {
 
     private String title;
-    private HashMap<Integer, ItemStack> items = new HashMap<>();
-    private HashMap<ItemStack, MenuButton> buttons = new HashMap<>();
+    private final HashMap<Integer, ItemStack> items = new HashMap<>();
+    private final HashMap<ItemStack, MenuButton> buttons = new HashMap<>();
     private Inventory inventory;
     private boolean cancelledClickToOtherItems;
-    private List<ItemStack> pickableItems = new ArrayList<>();
+    private final List<ItemStack> pickableItems = new ArrayList<>();
     @Setter private int rows;
     @Setter private MenuPattern pattern;
     private InventoryType inventoryType;

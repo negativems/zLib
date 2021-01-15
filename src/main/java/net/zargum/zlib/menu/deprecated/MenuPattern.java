@@ -1,4 +1,4 @@
-package net.zargum.zlib.menu;
+package net.zargum.zlib.menu.deprecated;
 
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-@Getter
+@Getter @Deprecated
 public class MenuPattern {
 
     private List<String> pattern;

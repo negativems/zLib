@@ -36,9 +36,7 @@ public class SkinUtil {
             System.out.println("Searched online skin of " + username);
             URL uuidURL = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
             InputStreamReader uuidReader = new InputStreamReader(uuidURL.openStream());
-            System.out.println("--------------");
             System.out.println(uuidReader.getEncoding());
-            System.out.println("--------------");
             String uuid = new JsonParser().parse(uuidReader).getAsJsonObject().get("id").getAsString();
 
             URL url_1 = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
