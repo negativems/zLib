@@ -2,10 +2,14 @@ package net.zargum.zlib;
 
 import lombok.Getter;
 import net.luckperms.api.LuckPerms;
+import net.zargum.zlib.configuration.Configuration;
+import net.zargum.zlib.configuration.ConfigurationRegister;
 import net.zargum.zlib.events.ListenersManager;
+import net.zargum.zlib.messages.Messages;
 import net.zargum.zlib.proxy.ProxyHandler;
 import net.zargum.zlib.scoreboard.Scoreboard;
 import net.zargum.zlib.skin.SkinManager;
+import net.zargum.zlib.tab.TabManager;
 import net.zargum.zlib.teleport.TeleportManager;
 import net.zargum.zlib.teleport.TeleportTask;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -17,22 +21,27 @@ import org.bukkit.plugin.java.JavaPlugin;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Getter
 public class zLib extends JavaPlugin {
 
     @Getter private static zLib instance;
-    private static final List<String> servers = new ArrayList<>();
+    public static JedisPool pool;
+
+    public static String[] servers;
     @Getter private final Map<UUID, Scoreboard> boards = new HashMap<>();
     @Getter private LuckPerms luckPermsApi;
-    public ProxyHandler proxyHandler;
-    public static JedisPool pool;
-    public String serverName;
-    public TeleportManager teleportManager;
-    public TeleportTask teleportTask;
-    public SkinManager skinManager;
-    public ListenersManager eventManager;
+    private ProxyHandler proxyHandler;
+    private String serverName;
+    private TeleportManager teleportManager;
+    private TeleportTask teleportTask;
+    private SkinManager skinManager;
+    private ListenersManager listenersManager;
+    private TabManager tabManager;
+    public Messages Messages;
 
     @Override
     public void onEnable() {
@@ -51,10 +60,10 @@ public class zLib extends JavaPlugin {
         }
 
         // Load Managers & Listener
+        listenersManager = new ListenersManager(this);
         teleportManager = new TeleportManager(this);
         teleportTask = new TeleportTask(this);
         skinManager = new SkinManager(this);
-        eventManager = new ListenersManager(this);
 
         // Bungee Helper
         log("Register BungeeCord channel...");
@@ -72,7 +81,6 @@ public class zLib extends JavaPlugin {
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) luckPermsApi = provider.getProvider();
 
-
         // Task
         teleportTask.runTaskTimer(this, 0L, 20L);
 
@@ -81,6 +89,12 @@ public class zLib extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        log("Saving all configurations...");
+        for (Configuration config : ConfigurationRegister.configurationList) {
+            if (!config.save()) {
+                log(ChatColor.RED + "Error saving " + config.getFileName() + " config.");
+            }
+        }
         log("Closing redis connection...");
         try (Jedis jedis = pool.getResource()) {
             String server = serverName;

@@ -31,6 +31,16 @@ public final class InventoryUtils {
     private InventoryUtils() {
     }
 
+    public static int getEmptySlots(Inventory inventory) {
+        ItemStack[] items = inventory.getContents();
+        int i = 0;
+        for (ItemStack item : items)
+            if (item != null && item.getType() != Material.AIR) {
+                i++;
+            }
+        return 36 - i;
+    }
+
     public static ItemStack[] deepClone(ItemStack[] origin) {
         Preconditions.checkNotNull(origin, "Origin cannot be null");
         ItemStack[] cloned = new ItemStack[origin.length];
@@ -103,7 +113,7 @@ public final class InventoryUtils {
         return isEmpty(inventory, true);
     }
 
-    public static boolean isEmpty(Inventory inventory, boolean checkArmour) {
+    public static boolean isEmpty(Inventory inventory, boolean checkArmor) {
         boolean result = true;
 
         ItemStack[] contents = inventory.getContents();
@@ -116,7 +126,7 @@ public final class InventoryUtils {
 
         if (!result) return false;
 
-        if (checkArmour && inventory instanceof PlayerInventory) {
+        if (checkArmor && inventory instanceof PlayerInventory) {
             contents = ((PlayerInventory) inventory).getArmorContents();
             for (ItemStack content : contents) {
                 if (content != null && content.getType() != Material.AIR) {

@@ -1,5 +1,6 @@
 package net.zargum.zlib.utils;
 
+import java.text.DecimalFormat;
 import java.time.*;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +14,11 @@ public final class TimeUtils {
     public static final long SECOND_MILLIS;
 
     private TimeUtils() {
+    }
+
+    public static double getSecondsBetweenMillisAndNow(double lastMillis) {
+        double currentTime = System.currentTimeMillis();
+        return Double.parseDouble(new DecimalFormat("###.##").format((currentTime - lastMillis) / 1000));
     }
 
     public static long getTomorrowMillis(ZoneId id) {

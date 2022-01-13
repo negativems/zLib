@@ -9,10 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ItemBuilder {
 
@@ -20,27 +17,39 @@ public class ItemBuilder {
 
     public ItemBuilder(Material material) {
         item = new ItemStack(material);
+        if (item.getAmount() == 0) item.setAmount(1);
     }
 
     public ItemBuilder(ItemStack itemStack) {
         item = itemStack;
+        if (item.getAmount() == 0) item.setAmount(1);
+    }
+
+    public ItemBuilder setItemMeta(ItemMeta meta) {
+        item.setItemMeta(meta);
+        return this;
     }
 
     public ItemMeta getItemMeta() {
         return item.getItemMeta();
     }
 
-    public ItemBuilder type(Material material) {
+    public ItemBuilder setType(Material material) {
         item.setType(material);
         return this;
     }
 
-    public ItemBuilder amount(Integer amount) {
+    public Material getType() {
+        return item.getType();
+    }
+
+    public ItemBuilder setAmount(Integer amount) {
         item.setAmount(amount);
         return this;
     }
 
-    public ItemBuilder setName(String name) {
+    public ItemBuilder setDisplayName(String name) {
+        name = name.isEmpty() ? " " : name;
         ItemMeta itemMeta = getItemMeta();
         itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
         item.setItemMeta(itemMeta);
@@ -65,26 +74,26 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder addLoreLine(String lore) {
+    public ItemBuilder addLore(String... lore) {
         ItemMeta itemMeta = getItemMeta();
         List<String> lores = itemMeta.getLore();
         if (lores == null) {
             lores = new ArrayList<>();
         }
-        lores.add(ColorUtils.translate(lore));
+        lores.addAll(Arrays.asList(ColorUtils.translate(lore)));
         itemMeta.setLore(lores);
         item.setItemMeta(itemMeta);
         return this;
     }
 
-    public ItemBuilder clearLore(int line) {
+    public ItemBuilder removeLore(int line) {
         ItemMeta itemMeta = getItemMeta();
         itemMeta.getLore().remove(line);
         item.setItemMeta(itemMeta);
         return this;
     }
 
-    public ItemBuilder clearLore() {
+    public ItemBuilder removeLore() {
         ItemMeta itemMeta = getItemMeta();
         itemMeta.getLore().clear();
         item.setItemMeta(itemMeta);
@@ -103,14 +112,20 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder durability(int durability) {
+    public ItemBuilder setDurability(int durability) {
         item.setDurability((short) durability);
         return this;
     }
 
-    @SuppressWarnings("deprecation")
-    public ItemBuilder data(int data) {
+    public ItemBuilder setData(int data) {
         item.setData(new MaterialData(item.getType(), (byte) data));
+        return this;
+    }
+
+    public ItemBuilder setUnbreakable(boolean unbreakable) {
+        ItemMeta meta = item.getItemMeta();
+        meta.spigot().setUnbreakable(unbreakable);
+        item.setItemMeta(meta);
         return this;
     }
 
@@ -159,7 +174,6 @@ public class ItemBuilder {
         ItemMeta meta = item.getItemMeta();
         meta.addItemFlags(flags);
         item.setItemMeta(meta);
-
         return this;
     }
 

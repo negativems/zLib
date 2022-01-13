@@ -2,6 +2,7 @@ package net.zargum.zlib.utils;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import net.zargum.zlib.textures.Texture;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 

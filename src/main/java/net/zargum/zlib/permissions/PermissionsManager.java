@@ -8,6 +8,7 @@ import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.luckperms.api.node.types.PrefixNode;
 import net.luckperms.api.query.QueryOptions;
+import net.zargum.zlib.utils.ColorUtils;
 import net.zargum.zlib.zLib;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class PermissionsManager {
 
-    private static LuckPerms API = zLib.getInstance().getLuckPermsApi();
+    private static final LuckPerms API = zLib.getInstance().getLuckPermsApi();
 
     private static User loadUser(Player player) {
         if (!player.isOnline()) throw new IllegalStateException("Player is offline");
@@ -109,9 +110,8 @@ public class PermissionsManager {
     }
 
     public static String getDisplayname(String username) {
-        User user = loadUser(username);
         Player player = Bukkit.getPlayer(username);
-        return getUserPrefix(player) + user.getUsername() + getUserSuffix(player);
+        return ColorUtils.translate(getUserPrefix(player) + username + getUserSuffix(player));
     }
 
     public static String getGroupPrefix(String grp) {

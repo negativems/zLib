@@ -1,11 +1,14 @@
 package net.zargum.zlib.database;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import lombok.Getter;
 import net.zargum.zlib.zLib;
+import org.bson.UuidRepresentation;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,14 +25,18 @@ public class MongoConnection {
     public MongoConnection(JavaPlugin plugin, String host, String port, String database, boolean auth, String username, String password) {
         this.plugin = plugin;
 
-        StringBuilder uriBuilder = new StringBuilder("mongodb://").append(host).append(":").append(port).append("/").append(database);
+        StringBuilder mongoClientURI = new StringBuilder("mongodb://").append(host).append(":").append(port).append("/").append(database);
         if (auth) {
             if (username == null || password == null) throw new NullPointerException("Tried to authenticate with null username or password");
-            uriBuilder.insert(1, username + ":").insert(2,password + "@");
-            System.out.println("[DEBUG] Authenticated: " + uriBuilder.toString());
+            mongoClientURI.insert(10, username + ":").insert(11 + username.length(),password + "@");
         }
 
-        client = MongoClients.create(uriBuilder.toString());
+        ConnectionString connectionString = new ConnectionString(mongoClientURI.toString());
+        MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder();
+        settingsBuilder.applyConnectionString(connectionString);
+        settingsBuilder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY).build();
+
+        client = MongoClients.create(settingsBuilder.build());
         this.database = client.getDatabase(database);
     }
 
@@ -62,7 +69,7 @@ public class MongoConnection {
 
     public void close() {
         client.close();
-        zLib.log(ChatColor.RED + "Mongo connection closed.");
+        zLib.log(ChatColor.YELLOW + "Mongo connection closed");
     }
 
     private void verify() {
@@ -71,11 +78,12 @@ public class MongoConnection {
             if (firstCollection == null) throw new NullPointerException("Tried to verify with no collections in the database");
             database.getCollection(firstCollection).countDocuments();
             verified = true;
-            zLib.log(ChatColor.GREEN + "Mongo connection successfully.");
+            zLib.log(ChatColor.GREEN + "Mongo connection successfully");
         } catch (MongoCommandException e) {
+            zLib.log(ChatColor.RED + "Mongo connection error");
             if (e.getErrorCode() == 13) {
-                zLib.log(ChatColor.DARK_RED + "Authentication is required for the database setted in the config file.");
-                zLib.log(ChatColor.DARK_RED + "Disabling '" + plugin.getName() + "'.");
+                zLib.log(ChatColor.DARK_RED + "Authentication is required for the database setted in the config file");
+                zLib.log(ChatColor.DARK_RED + "Disabling '" + plugin.getName() + "'");
                 zLib.getInstance().getServer().getPluginManager().disablePlugin(plugin);
             }
             //More checks soon...

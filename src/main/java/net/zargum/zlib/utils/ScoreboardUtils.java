@@ -1,6 +1,6 @@
 package net.zargum.zlib.utils;
 
-import net.zargum.zlib.utils.animations.DotsAnimation;
+import net.zargum.zlib.animations.impl.DotsAnimation;
 import org.bukkit.ChatColor;
 
 public class ScoreboardUtils {

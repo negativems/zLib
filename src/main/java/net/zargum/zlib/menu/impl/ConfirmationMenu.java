@@ -36,7 +36,7 @@ public final class ConfirmationMenu extends ButtonMenu<zLib> {
         buttons.put(11, new Button() {
             @Override
             public ItemStack getIcon(Player player) {
-                return new ItemBuilder(Material.STAINED_CLAY).durability(13).setName(ChatColor.GREEN + "Yes").addLoreLine(ChatColor.YELLOW + "Click to " + action).build();
+                return new ItemBuilder(Material.STAINED_CLAY).setDurability(13).setDisplayName(ChatColor.GREEN + "Yes").addLore(ChatColor.YELLOW + "Click to " + action).build();
             }
 
             @Override
@@ -48,7 +48,7 @@ public final class ConfirmationMenu extends ButtonMenu<zLib> {
         buttons.put(15, new Button() {
             @Override
             public ItemStack getIcon(Player player) {
-                return new ItemBuilder(Material.STAINED_CLAY).durability(14).setName(ChatColor.RED + "No").addLoreLine(ChatColor.YELLOW + "Click to return to the previous menu.").build();
+                return new ItemBuilder(Material.STAINED_CLAY).setDurability(14).setDisplayName(ChatColor.RED + "No").addLore(ChatColor.YELLOW + "Click to return to the previous menu.").build();
             }
 
             @Override

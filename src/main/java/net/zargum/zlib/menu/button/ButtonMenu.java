@@ -48,7 +48,7 @@ public abstract class ButtonMenu<T extends JavaPlugin> extends ChestMenu<T> {
             if (button != null) {
                 button.onClick(event);
             }
-        } else if (!topInventory.equals(clickedInventory) && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY || event.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
+        } else if (!topInventory.equals(clickedInventory) && (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY || event.getAction() == InventoryAction.COLLECT_TO_CURSOR)) {
             event.setCancelled(true);
         }
     }

@@ -1,5 +1,6 @@
 package net.zargum.zlib.skin;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
@@ -33,15 +34,15 @@ public class SkinUtil {
         }
 
         try {
-            System.out.println("Searched online skin of " + username);
             URL uuidURL = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
             InputStreamReader uuidReader = new InputStreamReader(uuidURL.openStream());
-            System.out.println(uuidReader.getEncoding());
             String uuid = new JsonParser().parse(uuidReader).getAsJsonObject().get("id").getAsString();
 
             URL url_1 = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
             InputStreamReader reader_1 = new InputStreamReader(url_1.openStream());
-            JsonObject textureProperty = new JsonParser().parse(reader_1).getAsJsonObject().get("properties").getAsJsonArray().get(0).getAsJsonObject();
+            JsonElement jsonElement = new JsonParser().parse(reader_1);
+            if (!jsonElement.isJsonObject()) return null;
+            JsonObject textureProperty = jsonElement.getAsJsonObject().get("properties").getAsJsonArray().get(0).getAsJsonObject();
             String texture = textureProperty.get("value").getAsString();
             String signature = textureProperty.get("signature").getAsString();
 

@@ -3,10 +3,11 @@ package net.zargum.zlib.hologram;
 import lombok.Getter;
 import net.minecraft.server.v1_8_R3.EntityArmorStand;
 import net.minecraft.server.v1_8_R3.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_8_R3.PacketPlayOutSpawnEntityLiving;
 import net.minecraft.server.v1_8_R3.WorldServer;
 import net.zargum.zlib.utils.Reflections;
+import net.zargum.zlib.zLib;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.entity.Player;
@@ -19,38 +20,52 @@ public class Hologram extends Reflections {
 
     // TODO: Change Player object to UUID
     private final JavaPlugin plugin;
-    private double linesdistance;
-    private boolean created;
 
-    private List<EntityArmorStand> armorStands;
+    private final String id;
+    private final double linesDistance = 0.26;
+    private boolean created, autoUpdate = false;
+    private List<EntityArmorStand> entities = new ArrayList<>();
     private Location location;
-    private List<String> lines;
-    private Map<Player, Boolean> players;
+    private List<String> lines = new ArrayList<>();
+    private Map<Player, Boolean> players = new HashMap<>();
     private final int unshowDistance = 45;
     private final int showDistance = 32;
 
-    public Hologram(JavaPlugin plugin) {
+    public Hologram(JavaPlugin plugin, String id, Location location) {
         this.plugin = plugin;
-        this.created = false;
-        this.linesdistance = 0.24;
-        this.armorStands = new ArrayList<>();
-        this.lines = new ArrayList<>();
-        this.players = new HashMap<>();
+        this.id = id;
+        this.location = location.clone();
     }
 
-    public Hologram(JavaPlugin plugin, String firstLine) {
-        this(plugin);
-        this.lines.add(firstLine);
+    public Hologram setAutoUpdate(boolean state) {
+        this.autoUpdate = state;
+        return this;
     }
 
     public Hologram setLocation(Location location) {
         this.location = location.clone();
-        this.location.setY(location.getY() + (linesdistance * lines.size()) + 0.8);
+//        for (Player player : Bukkit.getOnlinePlayers()) {
+//            if (isSpawnedTo(player)) {
+//                unshow(player);
+//                update(player);
+//            }
+//        }
+        return this;
+    }
+
+    public Hologram setLine(int lineIndex, String line) {
+        if (line.isEmpty()) {
+            EntityArmorStand entity = entities.get(lineIndex);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Reflections.sendPacket(new PacketPlayOutEntityDestroy(entity.getId()), player);
+            }
+        }
+        this.lines.set(lineIndex, line);
         return this;
     }
 
     public Hologram setLines(List<String> lines) {
-        this.lines = lines;
+        this.lines = new ArrayList<>(lines);
         return this;
     }
 
@@ -78,18 +93,16 @@ public class Hologram extends Reflections {
     }
 
     public void update(Player player) {
-        if (isSpawnedTo(player)) unshow(player);
-        for (EntityArmorStand stand : armorStands) stand.getBukkitEntity().remove();
-        this.armorStands = new ArrayList<>();
-        this.create();
-        this.show(player);
+       if (isNear(player)) show(player);
     }
 
     public void update() {
         int i = 0;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin,() -> update(player), i*3);
-            i++;
+            Bukkit.getScheduler().runTaskLaterAsynchronously(plugin,() -> {
+                update(player);
+            }, i);
+            i = i + 3;
         }
     }
 
@@ -98,24 +111,23 @@ public class Hologram extends Reflections {
     }
 
     public void create() {
-        int i = 1;
-        for (String line : lines) {
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.isEmpty()) {
+                entities.add(null);
+                continue;
+            }
             Location loc = location.clone();
             WorldServer worldServer = ((CraftWorld) loc.getWorld()).getHandle();
-            EntityArmorStand stand = new EntityArmorStand(worldServer);
-            stand.setLocation(loc.getX(), loc.getY() - (linesdistance * i), loc.getZ(), 0, 0);
-            if (line.length() != 0) {
-                stand.setCustomNameVisible(true);
-                stand.setCustomName(line);
-            }
-            stand.setGravity(false);
-            stand.setSmall(true);
-            stand.setInvisible(true);
-            stand.setBasePlate(false);
-            stand.setArms(false);
-
-            this.armorStands.add(stand);
-            i++;
+            EntityArmorStand entity = new EntityArmorStand(worldServer, loc.getX(), loc.getY() - (linesDistance * (i + 1)), loc.getZ());
+            entity.setCustomName(line);
+            entity.setCustomNameVisible(true);
+            entity.setGravity(false);
+            entity.setInvisible(true);
+            entity.setBasePlate(false);
+            entity.setArms(false);
+            entity.setSmall(true);
+            this.entities.add(entity);
         }
         this.created = true;
     }
@@ -123,8 +135,11 @@ public class Hologram extends Reflections {
     public void delete() {
         if (!this.created) throw new IllegalStateException("Hologram: Hologram not created.");
         for (Player player : Bukkit.getOnlinePlayers()) if (isSpawnedTo(player)) unshow(player);
-        for (EntityArmorStand stand : armorStands) stand.getBukkitEntity().remove();
-        this.armorStands = null;
+        for (EntityArmorStand stand : entities) {
+            if (stand == null) continue;
+            stand.getBukkitEntity().remove();
+        }
+        this.entities = null;
         this.lines = null;
         this.location = null;
         this.created = false;
@@ -132,22 +147,31 @@ public class Hologram extends Reflections {
     }
 
     public void show(Player player) {
-        if (!player.isOnline()) {
+        if (player == null || !player.isOnline()) {
+            zLib.log(ChatColor.RED + "Player is null");
             players.remove(player);
             return;
         }
         if (!this.created) throw new IllegalStateException("Hologram: Hologram not created");
-        if (isSpawnedTo(player)) throw new IllegalStateException("Hologram: Tried to show but is already spawned for " + player.getName());
+//        if (isSpawnedTo(player)) throw new IllegalStateException("Hologram: Tried to show but is already spawned for " + player.getName());
 
-        for (EntityArmorStand stand : armorStands) sendPacket(new PacketPlayOutSpawnEntityLiving(stand), player);
+        Bukkit.getPluginManager().callEvent(new HologramShowEvent(player, this));
         this.players.put(player, true);
+    }
+
+    public void show() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (isNear(player)) {
+                show(player);
+            }
+        }
     }
 
     public void unshow(Player player) {
         if (!this.created) throw new IllegalStateException("Hologram: hologram not created");
         if (!isSpawnedTo(player)) throw new IllegalStateException("Hologram: Tried to unshow hologram but is not spawned for " + player.getName());
 
-        for (EntityArmorStand stand : armorStands) sendPacket(new PacketPlayOutEntityDestroy(stand.getId()), player);
+        Bukkit.getPluginManager().callEvent(new HologramUnshowEvent(player, this));
         this.players.put(player, false);
     }
 }

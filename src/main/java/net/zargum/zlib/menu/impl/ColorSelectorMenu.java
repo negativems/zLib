@@ -61,10 +61,10 @@ public final class ColorSelectorMenu extends ButtonMenu<zLib> {
                     ItemBuilder builder = new ItemBuilder(BukkitUtils.toHeadSkull(color).clone());
 
                     String name = WordUtils.capitalizeFully((color.name()).replace("_", " "));
-                    builder.setName(color + name);
-                    builder.addLoreLine(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE);
-                    builder.addLoreLine(ChatColor.YELLOW + "Click to select the " + color + name + ChatColor.YELLOW + " color.");
-                    builder.addLoreLine(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE);
+                    builder.setDisplayName(color + name);
+                    builder.addLore(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE);
+                    builder.addLore(ChatColor.YELLOW + "Click to select the " + color + name + ChatColor.YELLOW + " color.");
+                    builder.addLore(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE);
                     return builder.build();
                 }
 
@@ -83,10 +83,10 @@ public final class ColorSelectorMenu extends ButtonMenu<zLib> {
             @Override
             public ItemStack getIcon(Player player) {
                 return new ItemBuilder(Material.BARRIER)
-                        .setName(ChatColor.WHITE + "Reset Color")
-                        .addLoreLine(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE)
-                        .addLoreLine(ChatColor.YELLOW + "Click to reset your current color.")
-                        .addLoreLine(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE)
+                        .setDisplayName(ChatColor.WHITE + "Reset Color")
+                        .addLore(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE)
+                        .addLore(ChatColor.YELLOW + "Click to reset your current color.")
+                        .addLore(ChatColor.GRAY + ITEM_LORE_STRAIGHT_LINE)
                         .build();
             }
 

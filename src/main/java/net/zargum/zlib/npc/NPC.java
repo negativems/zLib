@@ -3,6 +3,7 @@ package net.zargum.zlib.npc;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import net.minecraft.server.v1_8_R3.*;
 import net.zargum.zlib.hologram.Hologram;
@@ -12,6 +13,7 @@ import net.zargum.zlib.utils.Reflections;
 import net.zargum.zlib.zLib;
 import org.apache.commons.lang.RandomStringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
@@ -25,16 +27,15 @@ import java.util.*;
 @Getter
 public class NPC extends Reflections {
 
-    private final JavaPlugin plugin;
+    public final JavaPlugin plugin;
 
-    private EntityPlayer entityNPC;
+    private NPCEntity entityNPC;
     private final UUID uniqueID;
-    private GameProfile gameProfile;
+    private final GameProfile gameProfile;
     @Setter private Location location;
     @Setter private ItemStack itemInHand;
-    @Setter private ItemStack[] armour;
-    @Setter private List<String> hologramLines = new ArrayList<>();
-    @Setter private String displayName;
+    @Setter private ItemStack[] armor;
+    private String displayName;
     private final String id;
     private Property skinProperty;
     private Hologram hologram;
@@ -44,8 +45,9 @@ public class NPC extends Reflections {
     private final Map<Player, Boolean> players = new HashMap<>();
     private final int unshowDistance = 45;
     private final int showDistance = 32;
+    private final List<InteractHandler> interactHandlers = new ArrayList<>();
 
-    public NPC(JavaPlugin plugin, String id, Location location) {
+    public NPC(@NonNull JavaPlugin plugin, @NonNull String id, @NonNull Location location) {
         this.plugin = plugin;
         this.id = id;
         this.location = location.clone();
@@ -58,21 +60,10 @@ public class NPC extends Reflections {
         this(plugin, RandomStringUtils.randomAlphanumeric(6), location);
     }
 
-    public void setHologramLines(String... hologramLines) {
-        this.hologramLines = Arrays.asList(hologramLines);
-    }
-
-    public void setHologramLines(List<String> hologramLines) {
-        this.hologramLines = hologramLines;
-    }
-
-    public void setHologramLine(int line, String text) {
-        if (hologramLines.size() < line || line < 0) throw new IndexOutOfBoundsException("Line " + line + " is out of list");
-        hologramLines.set(line, text);
-    }
-
-    public void addHologramLine(String text) {
-        hologramLines.add(text);
+    public NPC attachHologram(Hologram hologram) {
+        this.hologram = hologram;
+        if (hologram != null) hologram.setLocation(location.clone().add(0, hologram.getLinesDistance(), 0));
+        return this;
     }
 
     public void setSkinProperty(Property skinProperty) {
@@ -92,8 +83,9 @@ public class NPC extends Reflections {
         hideName = true;
     }
 
-    public void unhideName() {
+    public NPC unhideName() {
         hideName = false;
+        return this;
     }
 
     public boolean isNear(Player player) {
@@ -105,7 +97,19 @@ public class NPC extends Reflections {
         tablisted = false;
     }
 
-    public void updateLocation() {
+    public void updateLocation(Location location) {
+        for (Player player : players.keySet()) {
+            if (isSpawnedTo(player)) {
+                unshow(player);
+            }
+        }
+        for (Player player : hologram.getPlayers().keySet()) {
+            if (hologram.isSpawnedTo(player)) {
+                hologram.unshow(player);
+            }
+        }
+
+        hologram.setLocation(location);
         entityNPC.setLocation(
                 location.getX(),
                 location.getY(),
@@ -113,41 +117,57 @@ public class NPC extends Reflections {
                 location.getYaw(),
                 location.getPitch()
         );
+        this.location = location.clone();
     }
 
     public void update(Player player) {
-        if (isSpawnedTo(player)) unshow(player);
-        if (isNear(player)) show(player);
+        if (isSpawnedTo(player)) {
+            unshow(player);
+        }
+        if (isNear(player)) {
+            show(player);
+        }
     }
 
     public void update() {
         int i = 0;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin,() -> update(player), i*3);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> update(player), i * 3L);
             i++;
         }
     }
 
     // TODO: Check if skins not lag the server, if it lags, make the method async.
     public void show(Player player) {
-        if (!created) throw new IllegalStateException("NPC not created");
-        if (isSpawnedTo(player)) throw new IllegalStateException("NPC: Tried to show but is already spawned for " + player.getName());
+        if (!created) {
+            throw new IllegalStateException("NPC not created");
+        }
+        if (isSpawnedTo(player)) {
+            throw new IllegalStateException("NPC: Tried to show but is already spawned for " + player.getName());
+        }
 
-        if (hologramLines.size() > 0) updateHologram(player);
+        if (hologram != null) hologram.update(player);
         if (selfSkin) applySkin(player.getName());
         if (!selfSkin && skinProperty != null) applySkin();
         if (displayName != null) entityNPC.setCustomName(displayName);
-        updateLocation();
 
         sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, entityNPC), player);
         sendPacket(new PacketPlayOutNamedEntitySpawn(entityNPC), player);
         sendPacket(new PacketPlayOutEntityHeadRotation(entityNPC, getFixRotation(location.getYaw())), player);
         sendPacket(new PacketPlayOutAnimation(entityNPC, 0), player);
 
-        if (armour != null && armour.length > 0) updateEquipment(player);
+        if (armor != null && armor.length > 0) updateEquipment(player);
         if (hideName) hideDisplayName(player);
         if (!tablisted) hideFromTablist(player);
         players.put(player, true);
+    }
+
+    public void show() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (isNear(player)) {
+                show(player);
+            }
+        }
     }
 
     public void unshow(Player player) {
@@ -156,8 +176,7 @@ public class NPC extends Reflections {
             throw new IllegalStateException("NPC: Tried to unshow but not spawned for " + player.getName());
         }
 
-        if (hologram != null && hologramLines.size() > 0) unshowHolograms(player);
-        else if (hologramLines.size() == 0) deleteHolograms();
+        if (hologram != null && hologram.isSpawnedTo(player)) unshowHolograms(player);
         if (hideName) sendPacket(new PacketPlayOutEntityDestroy(hideNameStand.getId()), player);
 
         sendPacket(new PacketPlayOutEntityDestroy(entityNPC.getId()), player);
@@ -168,21 +187,25 @@ public class NPC extends Reflections {
 
     public void create() {
         MinecraftServer server = MinecraftServer.getServer();
+        if (location == null || location.getWorld() == null) {
+            zLib.log(ChatColor.RED + "Error creating NPC " + id + ": world is not exists");
+            return;
+        }
         WorldServer worldServer = ((CraftWorld) location.getWorld()).getHandle();
         if (getSkinProperty() != null) applySkin();
 
-        entityNPC = new EntityPlayer(server, worldServer, gameProfile, new PlayerInteractManager(worldServer));
+        entityNPC = new NPCEntity(server, worldServer, gameProfile);
         entityNPC.setLocation(
-          location.getX(),
-          location.getY(),
-          location.getZ(),
-          location.getYaw(),
-          location.getPitch()
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                location.getYaw(),
+                location.getPitch()
         );
 
         // Outside skin
-        byte flags = (byte) 0xFF;
-        entityNPC.getDataWatcher().watch(10,  flags);
+        byte flags = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40;
+        entityNPC.getDataWatcher().watch(10, flags);
 
         // HideNameStand
         EntityArmorStand armorStand = new EntityArmorStand(worldServer, location.getX(), location.getY(), location.getZ());
@@ -201,17 +224,17 @@ public class NPC extends Reflections {
 
     public void updateEquipment(Player player) {
         int entityId = entityNPC.getBukkitEntity().getEntityId();
-        if (armour[3] != null) {
-            sendPacket(new PacketPlayOutEntityEquipment(entityId, 4, CraftItemStack.asNMSCopy(armour[3])), player);
+        if (armor[3] != null) {
+            sendPacket(new PacketPlayOutEntityEquipment(entityId, 4, CraftItemStack.asNMSCopy(armor[3])), player);
         }
-        if (armour[2] != null) {
-            sendPacket(new PacketPlayOutEntityEquipment(entityId, 3, CraftItemStack.asNMSCopy(armour[2])), player);
+        if (armor[2] != null) {
+            sendPacket(new PacketPlayOutEntityEquipment(entityId, 3, CraftItemStack.asNMSCopy(armor[2])), player);
         }
-        if (armour[1] != null) {
-            sendPacket(new PacketPlayOutEntityEquipment(entityId, 2, CraftItemStack.asNMSCopy(armour[1])), player);
+        if (armor[1] != null) {
+            sendPacket(new PacketPlayOutEntityEquipment(entityId, 2, CraftItemStack.asNMSCopy(armor[1])), player);
         }
-        if (armour[0] != null) {
-            sendPacket(new PacketPlayOutEntityEquipment(entityId, 1, CraftItemStack.asNMSCopy(armour[0])), player);
+        if (armor[0] != null) {
+            sendPacket(new PacketPlayOutEntityEquipment(entityId, 1, CraftItemStack.asNMSCopy(armor[0])), player);
         }
         if (itemInHand != null) {
             sendPacket(new PacketPlayOutEntityEquipment(entityId, 0, CraftItemStack.asNMSCopy(itemInHand)), player);
@@ -255,21 +278,6 @@ public class NPC extends Reflections {
         }
     }
 
-    private void updateHologram(Player player) {
-        if (hologram == null) {
-            Hologram hologram = new Hologram(plugin);
-            hologram.setLines(hologramLines);
-            hologram.setLocation(location.clone());
-            hologram.create();
-            hologram.show(player);
-            this.hologram = hologram;
-        } else {
-            hologram.setLines(hologramLines);
-            hologram.setLocation(location.clone());
-            hologram.update(player);
-        }
-    }
-
     private void unshowHolograms(Player player) {
         if (!players.containsKey(player))
             throw new IllegalStateException("NPC: Tried to unshow holograms to " + player.getName() + " but is not on players list.");
@@ -277,8 +285,8 @@ public class NPC extends Reflections {
             throw new IllegalStateException("NPC: Tried to unshow holograms to " + player.getName() + " but hologram == null");
         if (!hologram.isCreated())
             throw new IllegalStateException("NPC: Tried to unshow holograms to " + player.getName() + " but hologram is not created.");
-        if (hologramLines.size() == 0)
-            throw new IllegalStateException("NPC: Tried to unshow holograms to " + player.getName() + " but there is no holograms.");
+        if (!hologram.isSpawnedTo(player))
+            throw new IllegalStateException("NPC: Tried to unshow holograms to " + player.getName() + " but is not spawned.");
 
         hologram.unshow(player);
     }
@@ -288,6 +296,16 @@ public class NPC extends Reflections {
             hologram.delete();
         }
         hologram = null;
+    }
+
+    public void addInteractHandler(InteractHandler handler) {
+        if (interactHandlers.contains(handler)) return;
+
+        interactHandlers.add(handler);
+    }
+
+    public void removeInteractHandler(InteractHandler handler) {
+        interactHandlers.remove(handler);
     }
 
 }

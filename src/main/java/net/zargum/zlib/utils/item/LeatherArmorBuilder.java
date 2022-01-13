@@ -1,5 +1,6 @@
 package net.zargum.zlib.utils.item;
 
+import net.zargum.zlib.utils.JavaUtils;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -36,6 +37,7 @@ public class LeatherArmorBuilder extends ItemBuilder{
     }
 
     public LeatherArmorBuilder color(String hex) {
+        if (!JavaUtils.isHexNumber(hex.substring(1)) || hex.length() != 7) throw new IllegalStateException("Invalid hexadecimal " + hex);
         return color(Integer.valueOf(hex.substring(1, 3), 16), Integer.valueOf(hex.substring(3, 5), 16), Integer.valueOf(hex.substring(5, 7), 16));
     }
 

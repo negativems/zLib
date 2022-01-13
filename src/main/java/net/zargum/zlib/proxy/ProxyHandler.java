@@ -7,16 +7,16 @@ import net.zargum.zlib.zLib;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 public class ProxyHandler implements PluginMessageListener {
 
-    final private zLib plugin;
+    private final zLib plugin;
     private final Map<String, Integer> serverPlayersCount = new HashMap<>();
     private final Map<String, Integer> serversStatus = new HashMap<>();
     private final Map<String, Integer> serversMaxPlayers = new HashMap<>();
+    private List<String> servers = new ArrayList<>();
 
     public ProxyHandler(zLib plugin) {
         this.plugin = plugin;
@@ -30,6 +30,7 @@ public class ProxyHandler implements PluginMessageListener {
         if (subchannel.equals("ServerMaxPlayers")) serversMaxPlayers.put(in.readUTF(), in.readInt());
         if (subchannel.equals("ServerStatus")) serversStatus.put(in.readUTF(), in.readInt());
         if (subchannel.equals("PlayerCount")) serverPlayersCount.put(in.readUTF(), in.readInt());
+        if (subchannel.equals("GetServers")) servers = Arrays.asList(in.readUTF().split(", "));
     }
 
 }

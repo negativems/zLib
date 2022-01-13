@@ -10,17 +10,18 @@ import java.util.UUID;
 public class TeleportManager {
 
     final private zLib plugin;
-    @Getter private HashMap<UUID, Location> locationMap = new HashMap<>(); // Location of the player
-    @Getter private HashMap<UUID, Long> timeMap = new HashMap<>(); // Time since the start
-    @Getter private HashMap<UUID, Integer> cooldownMap = new HashMap<>(); // How much seconds of the cooldown
+    @Getter private final HashMap<UUID, TeleportMap> locationMap = new HashMap<>(); // Location of the player
+    @Getter private final HashMap<UUID, Long> timeMap = new HashMap<>(); // Time since the start
+    @Getter private final HashMap<UUID, Integer> cooldownMap = new HashMap<>(); // How much seconds of the cooldown
 
     public TeleportManager(zLib plugin) {
         this.plugin = plugin;
     }
 
-    public void addPlayer(UUID uniqueId, int cooldownTime, Location location) {
+    public void addPlayer(UUID uniqueId, int cooldownTime, Location locationTo) {
         timeMap.put(uniqueId, System.currentTimeMillis());
-        locationMap.put(uniqueId, location);
+        Location locationFrom = plugin.getServer().getPlayer(uniqueId).getLocation();
+        locationMap.put(uniqueId, new TeleportMap(locationFrom, locationTo));
         cooldownMap.put(uniqueId, cooldownTime);
     }
 

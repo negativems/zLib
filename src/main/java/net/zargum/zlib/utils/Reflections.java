@@ -27,9 +27,8 @@ public class Reflections {
             field.setAccessible(true);
             return field.get(obj);
         } catch (Exception e) {
-            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     public static Object getValueNull(Object obj, String name) {
@@ -38,13 +37,12 @@ public class Reflections {
             field.setAccessible(true);
             return field.get(null);
         } catch (Exception e) {
-            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     // For Lunar Client
-    public static void sendPacket(Player p, Object packet) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, NoSuchFieldException, ClassNotFoundException {
+    public static void sendClientPacket(Player p, Object packet) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, NoSuchFieldException, ClassNotFoundException {
         Object nmsPlayer = p.getClass().getMethod("getHandle").invoke(p);
         Object plrConnection = nmsPlayer.getClass().getField("playerConnection").get(nmsPlayer);
         plrConnection.getClass().getMethod("sendPacket", getNmsClass("Packet")).invoke(plrConnection, packet);

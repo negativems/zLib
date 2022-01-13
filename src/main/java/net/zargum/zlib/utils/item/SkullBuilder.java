@@ -2,8 +2,8 @@ package net.zargum.zlib.utils.item;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import net.zargum.zlib.textures.Texture;
 import net.zargum.zlib.utils.Reflections;
-import net.zargum.zlib.utils.Texture;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

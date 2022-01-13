@@ -25,6 +25,22 @@ public final class JavaUtils {
             or(CharMatcher.WHITESPACE).
             precomputed();
 
+    public static String capitalizeFirstLetter(String original) {
+        if (original == null || original.length() == 0) {
+            return original;
+        }
+        return original.substring(0, 1).toUpperCase() + original.substring(1);
+    }
+
+    public static boolean isHexNumber(String n) {
+        try {
+            Long.parseLong(n, 16);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
     public static boolean isBoolean(String value) {
         return value != null && Arrays.stream(new String[]{"true", "false", "1", "0"}).anyMatch(b -> b.equalsIgnoreCase(value));
     }

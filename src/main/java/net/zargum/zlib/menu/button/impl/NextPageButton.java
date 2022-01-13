@@ -14,8 +14,8 @@ import org.bukkit.inventory.ItemStack;
 @AllArgsConstructor
 public final class NextPageButton implements Button {
 
-    private static final ItemStack DISALLOWED = new ItemBuilder(Material.CARPET).setName(ChatColor.GRAY + "Next Page").durability(7).build();
-    private static final ItemStack ALLOWED = new ItemBuilder(Material.CARPET).setName(ChatColor.GREEN + "Next Page").durability(13).build();
+    private static final ItemStack DISALLOWED = new ItemBuilder(Material.CARPET).setDisplayName(ChatColor.GRAY + "Next Page").setDurability(7).build();
+    private static final ItemStack ALLOWED = new ItemBuilder(Material.CARPET).setDisplayName(ChatColor.GREEN + "Next Page").setDurability(13).build();
 
     private final PaginatedMenu menu;
 

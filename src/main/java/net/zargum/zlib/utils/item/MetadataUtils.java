@@ -61,7 +61,6 @@ public class MetadataUtils {
         return tag;
     }
 
-    @SuppressWarnings("unchecked")
     private static Object getObject(NBTBase tag) {
         if(tag instanceof NBTTagEnd){
             return null;

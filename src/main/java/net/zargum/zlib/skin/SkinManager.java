@@ -16,7 +16,7 @@ import java.util.Set;
 public class SkinManager {
 
     private final zLib plugin;
-    @Getter private Map<String, String[]> skins = new HashMap<>();
+    @Getter private final Map<String, String[]> skins = new HashMap<>();
     @Getter private File file;
     @Getter private FileConfiguration configuration;
 
